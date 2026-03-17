@@ -53,18 +53,13 @@ The original pipeline contained additional modules such as annotation, repeat ma
 
 ## Challenges and Debugging
 
-A significant portion of the work involved troubleshooting rather than running the pipeline itself.
+A significant part of this project involved troubleshooting and adapting the original workflow rather than directly executing it.
 
-Main issues encountered:
+During this process, several practical issues were encountered, including environment resolution delays, dependency conflicts, and inconsistencies within the pipeline structure. In particular, the conda/mamba environment setup proved to be time-consuming, and some components of the original workflow required modification due to missing scripts and incompatible rule dependencies.
 
-- Conda environment resolution stalled (~1 hour)  
-- Mamba solver remained at 100% CPU for ~9 hours  
-- Missing scripts in the original pipeline  
-- Incorrect file format (.fastq.gz not actually gzipped)  
-- Broken rule dependencies  
-- Reference genome download errors (404 issues)  
+Additionally, input data validation revealed format inconsistencies, and reference genome retrieval required correction due to outdated or inaccessible links.
 
-This process significantly improved practical understanding of workflow debugging and environment management.
+Addressing these challenges was a key part of the project and contributed to a better understanding of workflow debugging, reproducibility, and environment management in bioinformatics pipelines.
 
 ---
 
