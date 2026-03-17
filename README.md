@@ -1,5 +1,7 @@
 # Giardia duodenalis Genome Assembly
 
+A hands-on genome assembly project focused on debugging and pipeline optimization.
+
 This project presents a genome assembly and evaluation workflow using Oxford Nanopore long-read data.
 
 The main objective was not only to run an existing pipeline, but to understand, debug, and adapt it into a working and reproducible workflow.
@@ -62,7 +64,7 @@ Main issues encountered:
 - Broken rule dependencies  
 - Reference genome download errors (404 issues)  
 
-These steps required iterative debugging and restructuring of the workflow.
+This process significantly improved practical understanding of workflow debugging and environment management.
 
 ---
 
@@ -83,6 +85,34 @@ NGA50 | 623 kb
 - N50 reflects moderate assembly quality  
 
 The resulting assembly is usable and consistent with expectations for this dataset.
+
+---
+
+## How to Run
+
+Clone the repository:
+
+git clone https://github.com/caganyasa/Giardia-duodenalis-Genome-Assembly.git  
+cd Giardia-duodenalis-Genome-Assembly  
+
+Create environment:
+
+conda env create -f workflow/rules/envs/genomics.yaml  
+conda activate genomics_min  
+
+Run pipeline:
+
+snakemake --cores 4
+
+---
+
+## Input Data
+
+The pipeline expects Nanopore reads in the following structure:
+
+data/DNA/{sample}/nanopore.fastq.gz  
+
+Update the config.yaml file to match your local data directory.
 
 ---
 
