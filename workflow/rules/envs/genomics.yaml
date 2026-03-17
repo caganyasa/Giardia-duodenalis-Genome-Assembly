@@ -1,33 +1,14 @@
-name: genomics
+name: genomics_min
 channels:
   - bioconda
   - conda-forge
+  - defaults
+
 dependencies:
-  - bioconda::fastqc
-  - bioconda::trimmomatic
-  - bioconda::bwa
-  - bioconda::flye
-  - bioconda::masurca
-  - bioconda::bowtie2
-  - bioconda::samtools
-  - bioconda::meryl
-  - bioconda::winnowmap
-  - bioconda::pilon
-  - bioconda::seqkit
-  - bioconda::quast
-  - bioconda::multiqc
-  - bioconda::deeptools
-  - bioconda::prodigal
-  - bioconda::glimmerhmm
-  - bioconda::diamond
-  - bioconda::eggnogmapper
-  - bioconda::interproscan
-  - bioconda::repeatmodeler
-  - bioconda::repeatmasker
-  - bioconda::trnascan-se
-  - bioconda::barrnap
-  - bioconda::cdhit
-  - bioconda::orthofinder
-
-
-
+  - flye
+  - meryl
+  - winnowmap
+  - samtools
+  - quast
+  - deeptools
+  - python=3.10

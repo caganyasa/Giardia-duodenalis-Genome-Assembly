@@ -1,184 +1,105 @@
 rule fastqc_before_trimming:
     input:
-         input_dir="/data/zeynep/barkhanus_data/DNA/raw",
+        input_dir=config["data_dir"] + "/DNA/raw"
     params:
-          threads=32,
+        threads=32
     output:
-          out_dir=directory("results/Genomics/1_Assembly/1_Preprocessing/fastqc_before_trimming/"),
+        out_dir=directory("results/Genomics/1_Assembly/1_Preprocessing/fastqc_before_trimming/")
     conda:
-         "envs/genomics.yaml",
+        "envs/genomics.yaml"
     script:
-          "scripts/Genomics/1_Assembly/1_Preprocessing/ReadQualityCheck.py"
+        "scripts/Genomics/1_Assembly/1_Preprocessing/ReadQualityCheck.py"
 
-#Assembly
+
+# =========================
+# ASSEMBLY
+# =========================
+
 rule flye:
     input:
-         reads="/data/zeynep/barkhanus_data/DNA/{process}/nanopore.fastq.gz",
+        reads=config["data_dir"] + "/DNA/{process}/nanopore.fastq.gz"
     params:
-          genome_size="114m",
-          threads=32,
+        genome_size="114m",
+        threads=32
     output:
-          #out_dir=directory("results/Genomics/1_Assembly/2_Assemblers/flye/{process}/")
-           out_dir= "results/Genomics/1_Assembly/2_Assemblers/flye/{process}/assembly.fasta"
-    conda:
-         "envs/genomics.yaml"
-    script:
-          "scripts/Genomics/1_Assembly/2_Assemblers/FlyeAssembler.py"
-
-rule setup_nr_db:  #FIX how to actuvste this before running blastn
-    output:
-        outdir = protected(directory("/data/zeynep/databases"))
+        assembly="results/Genomics/1_Assembly/2_Assemblers/flye/{process}/assembly.fasta/assembly.fasta"
     conda:
         "envs/genomics.yaml"
     script:
-        "scripts/Genomics/1_Assembly/3_Evaluation/setup_nr_db.py"
+        "scripts/Genomics/1_Assembly/2_Assemblers/FlyeAssembler.py"
 
-rule blastn:
-    input:
-        query="results/Genomics/1_Assembly/2_Assemblers/{assembler}/assembly.fasta",
-        db="/data/zeynep/databases"
-    output:
-        "results/Genomics/1_Assembly/3_Evaluation/blastn/{assembler}/{db}/assembly.blastn"
-    params:
-        outfmt= "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qlen slen stitle",
-        threads=32,
-        evalue=1e-10,
-        db_prefix="/data/zeynep/databases/{db}"
-    conda:
-        "envs/genomics.yaml"
-    script:
-        "scripts/Genomics/1_Assembly/3_Evaluation/blastn.py"
+# =========================
+# (DISABLED) Meryl (missing script)
+# =========================
+# rule meryl:
+#     input:
+#         genome="results/Genomics/1_Assembly/2_Assemblers/{assembler}/assembly.fasta"
+#     output:
+#         merylDB=directory("results/Genomics/1_Assembly/3_Evaluation/winnowmap/{assembler}/merlyDB"),
+#         repetitive_k15="results/Genomics/1_Assembly/3_Evaluation/winnowmap/{assembler}/repetitive_k15.txt"
+#     params:
+#         threads=30,
+#         nanopore=True
+#     conda:
+#         "envs/genomics.yaml"
+#     script:
+#         "scripts/Genomics/1_Assembly/3_Evaluation/CalculateKmerLongReads.py"
 
-rule makeblastdb:
-    input:
-        "results/Genomics/1_Assembly/2_Assemblers/{assembler}/{db}.fasta"
-    output:
-        multiext("results/Genomics/1_Assembly/2_Assemblers/{assembler}/]{db}",
-            ".ndb",
-            ".nhr",
-            ".nin",
-            ".not",
-            ".nsq",
-            ".ntf",
-            ".nto")
-    params:
-          outname="results/Genomics/1_Assembly/2_Assemblers/{assembler}/{db}"
-    conda:
-        "envs/genomics.yaml"
-    shell:
-        "makeblastdb -in {input} -dbtype nucl -out {params.outname}"
 
-rule blastn_EST:
-    input:
-        #query="resources/RawData/S_barkhanus_cloneMiner_cDNA_library.fasta",
-        query="/data/zeynep/barkhanus_data/EST/S_barkhanus_cloneMiner_cDNA_library.fasta",
-        db="results/Genomics/1_Assembly/2_Assemblers/{assembler}/{db}.ndb"
-    output:
-        "results/Genomics/1_Assembly/3_Evaluation/blastn/{assembler}/{db}_est.blastn"
-    params:
-        outfmt= "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qlen slen stitle",
-        threads=32,
-        evalue=1e-10,
-        db_prefix="results/Genomics/1_Assembly/2_Assemblers/{assembler}/{db}"
-    conda:
-        "envs/genomics.yaml"
-    script:
-        "scripts/Genomics/1_Assembly/3_Evaluation/blastn.py"
+# =========================
+# (OPTIONAL) Winnowmap (meryl bağlı olduğu için kapalı)
+# =========================
+# rule winnowmap:
+#     input:
+#         genome="results/Genomics/1_Assembly/2_Assemblers/{assembler}/assembly.fasta",
+#         long_read=config["data_dir"] + "/DNA/raw/{long_read}.fastq.gz"
+#     output:
+#         sorted_bam="results/Genomics/1_Assembly/3_Evaluation/winnowmap/{assembler}/{long_read}.bam"
+#     params:
+#         threads=32
+#     conda:
+#         "envs/genomics.yaml"
+#     script:
+#         "scripts/Genomics/1_Assembly/3_Evaluation/MapLongReadsToAssembly.py"
 
-"""rule make_diamond_db_assembly:
-    input:
-        "results/Genomics/1_Assembly/2_Assemblers/{assembler}/{db}.fasta"
-    output:
-        "results/Genomics/1_Assembly/2_Assemblers/{assembler}/{db}.db.dmnd"
-    conda:
-        "envs/genomics.yaml"
-    shell:
-        "diamond makedb --in {input} --db {output}"
 
-rule diamond_blastn_est_tag:
-    input:
-        #query="resources/RawData/S_barkhanus_cloneMiner_cDNA_library.fasta",
-        query= "/data/zeynep/barkhanus_data/EST/S_barkhanus_cloneMiner_cDNA_library.fasta",
-        db="results/Genomics/1_Assembly/2_Assemblers/{assembler}/{db}.db.dmnd"
+# =========================
+# EVALUATION
+# =========================
 
-    output:
-        "results/Genomics/1_Assembly/3_Evaluation/blastn/{assembler}/{db}_est.blastn"
-    params:
-        outfmt= "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qlen slen stitle",
-        threads=32,
-        evalue=1e-10,
-        db_prefix="results/Genomics/1_Assembly/2_Assemblers/{assembler}/"
-    conda:
-        "envs/genomics.yaml"
-    script:
-        "scripts/Genomics/1_Assembly/3_Evaluation/Diamond_est.py"""
-
-rule meryl:
-    input:
-         genome="results/Genomics/1_Assembly/2_Assemblers/{assembler}/assembly.fasta",
-    output:
-          merylDB=directory("results/Genomics/1_Assembly/3_Evaluation/winnowmap/{assembler}/merlyDB"),
-          repetitive_k15="results/Genomics/1_Assembly/3_Evaluation/winnowmap/{assembler}/repetitive_k15.txt",
-    params:
-          threads=30,
-          nanopore=True
-    conda:
-         "envs/genomics.yaml"
-    script:
-          "scripts/Genomics/1_Assembly/3_Evaluation/CalculateKmerLongReads.py"
-
-rule winnowmap:
-    input:
-         genome="results/Genomics/1_Assembly/2_Assemblers/{assembler}/assembly.fasta",
-         long_read="/data/zeynep/barkhanus_data/DNA/raw/{long_read}.fastq.gz",
-         merylDB="results/Genomics/1_Assembly/3_Evaluation/winnowmap/{assembler}/merlyDB",
-         repetitive_k15="results/Genomics/1_Assembly/3_Evaluation/winnowmap/{assembler}/repetitive_k15.txt",
-    output:
-          sorted_bam="results/Genomics/1_Assembly/3_Evaluation/winnowmap/{assembler}/{long_read}.bam",
-    params:
-          threads=32,
-          nanopore=True
-    conda:
-         "envs/genomics.yaml"
-    script:
-          "scripts/Genomics/1_Assembly/3_Evaluation/MapLongReadsToAssembly.py"
-
-#Evaluation
 rule quast:
     input:
-         assembly="results/Genomics/1_Assembly/2_Assemblers/{assembler}/assembly.fasta",
+        assembly="results/Genomics/1_Assembly/2_Assemblers/flye/raw/assembly.fasta/assembly.fasta"
     params:
-          threads=32
+        threads=32
     output:
-          report_dir=directory("results/Genomics/1_Assembly/3_Evaluation/quast/{assembler}/")
+        report_dir=directory("results/Genomics/1_Assembly/3_Evaluation/quast/flye/raw/")
     conda:
-         "envs/genomics.yaml"
+        "envs/genomics.yaml"
     script:
-          "scripts/Genomics/1_Assembly/3_Evaluation/AssemblyQualityCheck.py"
+        "scripts/Genomics/1_Assembly/3_Evaluation/AssemblyQualityCheck.py"
+
 
 rule multiqc:
     input:
-         input_dir="results/Genomics/1_Assembly/",
-    params:
-          threads=32
+        input_dir="results/Genomics/1_Assembly/"
     output:
-          out_dir=directory("results/Genomics/1_Assembly/3_Evaluation/multiqc/{assembler}")
+        out_dir=directory("results/Genomics/1_Assembly/3_Evaluation/multiqc/")
     conda:
-         "envs/genomics.yaml"
+        "envs/genomics.yaml"
     shell:
-         'multiqc {input.input_dir} -o {output.out_dir}'
+        "multiqc {input.input_dir} -o {output.out_dir}"
+
 
 rule plot_coverage_cont:
     input:
-         #coverage on assembley
-         nano="results/Genomics/1_Assembly/3_Evaluation/winnowmap/{assembler}/nanopore.bam"
+        nano="results/Genomics/1_Assembly/3_Evaluation/winnowmap/flye/raw/nanopore.bam"
     output:
-          out="results/Genomics/1_Assembly/3_Evaluation/deeptools/{assembler}.png",
-          outraw="results/Genomics/1_Assembly/3_Evaluation/deeptools/{assembler}/outRawCounts.txt"
+        out="results/Genomics/1_Assembly/3_Evaluation/deeptools/flye_raw.png",
+        outraw="results/Genomics/1_Assembly/3_Evaluation/deeptools/flye_raw/outRawCounts.txt"
     params:
-          threads=32,
+        threads=32
     conda:
-         "envs/genomics.yaml"
+        "envs/genomics.yaml"
     script:
-          "scripts/Genomics/1_Assembly/3_Evaluation/PlotCoverage.py"
-
+        "scripts/Genomics/1_Assembly/3_Evaluation/PlotCoverage.py"

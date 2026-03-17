@@ -1,0 +1,12 @@
+data/
+results/
+.snakemake/
+smk_conda_envs/
+*.fastq
+*.fastq.gz
+*.bam
+*.sam
+*.fasta
+*.fa
+*.gz
+__pycache__/
