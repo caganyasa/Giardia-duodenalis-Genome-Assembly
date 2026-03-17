@@ -1,68 +1,115 @@
-# GenoDiplo: Genome analyses of the diplomonad _Spironucleus barkhanus_ 
+# Giardia duodenalis Genome Assembly
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+This project presents a genome assembly and evaluation workflow using Oxford Nanopore long-read data.
 
-![GenoDiplo Logo](images/logo.png "GenoDiplo Logo")
+The main objective was not only to run an existing pipeline, but to understand, debug, and adapt it into a working and reproducible workflow.
 
-## Overview
+---
 
-The implementation of the Snakemake workflow management system revealed the need for custom adjustments and the integration of additional software for each genome project. Managing command-line tools sequentially introduced significant repetitive tasks, making it challenging to maintain comprehensive records and reproduce results. The project structure frequently evolved based on final outcomes, emphasizing the importance of reproducibility for efficient time management and keeping the project current for future advancements.
+## Organism and Dataset
 
-## GenoDiplo Pipeline
+- Species: Giardia duodenalis  
+- SRA Accession: SRR22286255  
+- Platform: Oxford Nanopore (MinION)  
+- Data size: ~857 Mb  
 
-![GenoDiplo Pipeline](images/dag.png "GenoDiplo Pipeline")
+This dataset was selected due to its manageable genome size and suitability for long-read assembly.
 
-The GenoDiplo pipeline was initially tailored for the large diplomonad genome of *H. inflata*, characterized by sparse introns. However, the pipeline's structure is adaptable for other genome projects with the incorporation of additional software tools. In this study, a simplified version of the GenoDiplo pipeline was applied to *S. barkhanus*.
+---
 
-## Genome Assembly
+## Reference Genome
 
-The GenoDiplo pipeline focused on genome assembly using only Nanopore long reads, excluding Illumina polishing and contamination processes due to the bacteria-free cultivation of *S. barkhanus*. Nanopore reads, being long and accurate, facilitated a compact assembly given the genome size compared to *S. salmonicida*. 
+- Accession: GCF_000002435.2  
+- Organism: Giardia duodenalis WB (Assemblage A)  
 
-## Gene Prediction and Functional Annotation
+This reference was used for assembly evaluation and comparison.
 
-### Gene Prediction
+---
 
-The genome annotation pipeline was based on custom workflows previously applied to other diplomonad genomes. For *S. barkhanus*, annotation was performed using GlimmerHMM, which was trained on *S. salmonicida*, in conjunction with Prodigal for prokaryotic gene prediction to compare single-exon genes. To ensure consistency with previously assembled genomes, we initially conducted structural annotation using both GlimmerHMM and Prodigal. However, due to the complexities involved in installing and configuring GlimmerHMM, we ultimately chose to rely solely on Prodigal for future genomic analyses, even though it is known to slightly overpredict gene numbers. These potentially overpredicted genes will be addressed through subsequent functional annotations.
-### Functional Annotation
+## Pipeline Overview
 
-The functional annotation pipeline followed a hierarchical approach, similar to the GenoDiplo pipeline used for *H. inflata*. The process started with sequence similarity searches across various diplomonad genomes and transcriptomes, such as *Trepomonas*, and proceeded with InterProScan to identify functional genes that were not previously annotated in diplomonad genomes. Additionally, tRNA, rRNA, and RepeatMasker were utilized to annotate the non-coding regions of the genome. However, the GenoDiplo pipeline begins with a DIAMOND BLAST search across all available diplomonad genomes. The remaining functional enrichment steps were separated due to the requirement for external databases, which necessitate local software installations and database access outside of the typical Conda environments.
-## Getting Started
+The workflow is based on a modified version of the GenoDiplo Snakemake pipeline.
 
-### Prerequisites
+Final structure:
 
-- Snakemake
+FASTQ → Flye → QUAST
 
-### Installation
+The original pipeline contained additional modules such as annotation, repeat masking, and orthology analysis. These were removed to ensure the pipeline could run reliably in a local environment.
 
-Clone the repository:
+---
 
-```bash
-git clone https://github.com/yourusername/GenoDiplo.git
-cd GenoDiplo
-```
+## Key Modifications
 
-Install the required dependencies:
+- Replaced hardcoded paths with configurable inputs  
+- Simplified the Snakemake workflow  
+- Removed unused and computationally heavy modules  
+- Fixed Flye output structure mismatch  
+- Built a minimal conda environment  
+- Adjusted rule dependencies  
 
-```bash
-# Example for installing dependencies
-conda env create -f environment.yml
-conda activate GenoDiplo
-```
+---
 
-### Usage
+## Challenges and Debugging
 
-Run the pipeline:
+A significant portion of the work involved troubleshooting rather than running the pipeline itself.
 
-```bash
-snakemake --cores <number_of_cores>
-```
+Main issues encountered:
 
-Customize the configuration file (`config.yaml`) to match your project requirements.
+- Conda environment resolution stalled (~1 hour)  
+- Mamba solver remained at 100% CPU for ~9 hours  
+- Missing scripts in the original pipeline  
+- Incorrect file format (.fastq.gz not actually gzipped)  
+- Broken rule dependencies  
+- Reference genome download errors (404 issues)  
 
-## Contributing
+These steps required iterative debugging and restructuring of the workflow.
 
-Contributions are welcome! Please submit a pull request or open an issue to discuss your ideas.
+---
 
-## License
+## Results (QUAST)
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Metric | Value  
+---|---  
+Assembly size | 11.56 Mb  
+Reference size | 12.07 Mb  
+N50 | 1.91 Mb  
+Contigs | 16  
+NGA50 | 623 kb  
+
+### Interpretation
+
+- Assembly size is close to the reference (~95%)  
+- Contig count indicates relatively good continuity  
+- N50 reflects moderate assembly quality  
+
+The resulting assembly is usable and consistent with expectations for this dataset.
+
+---
+
+## Key Takeaway
+
+The most important lesson from this work:
+
+A simple working pipeline is more valuable than a complex non-working one.
+
+---
+
+## Future Work
+
+- Polishing (Racon / Medaka)  
+- Variant analysis  
+- Functional annotation  
+- Further modularization of the pipeline  
+
+---
+
+## Notes
+
+This project uses and adapts components from the GenoDiplo pipeline:  
+https://github.com/zeyak/GenoDiplo
+
+---
+
+## Author
+
+Cagan Yasa
